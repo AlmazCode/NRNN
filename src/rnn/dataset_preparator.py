@@ -660,8 +660,8 @@ if __name__ == "__main__":
     
     # Prepare from folder
     text = prep.prepare_dataset(
-        input_path='..\\assets\\dataset\\numbers\\',
-        output_path='..\\assets\\optimized\\dataset_numbers.txt',
+        input_path=r'C:\Users\Админ\OneDrive\Рабочий стол\NRNN\src\assets\dataset\Tyo\tyo.txt',
+        output_path='..\\assets\\optimized\\dataset_tyo.txt',
         clean_level='medium',
         remove_meta=True,
         merge_lines=False,
