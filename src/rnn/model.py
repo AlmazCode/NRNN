@@ -225,7 +225,10 @@ class TextRNN:
             )
 
         # Gradient scaler for automatic mixed precision (AMP)
-        scaler = torch.cuda.amp.GradScaler('cuda', enabled=use_amp)
+        scaler = torch.cuda.amp.GradScaler(enabled=use_amp)
+
+        best_val_loss = float('inf')
+        patience_counter = 0
 
         # Optionally resume from a saved checkpoint
         start_epoch = 0
@@ -264,9 +267,6 @@ class TextRNN:
         
         Console.log("\nStarting training...")
         Console.log(f"Train size: {train_size}, Val size: {val_size}")
-        
-        best_val_loss = float('inf')
-        patience_counter = 0
         
         for epoch in range(epochs):
             # Training phase
@@ -354,7 +354,7 @@ class TextRNN:
                 self.save_model(f"{self.model_name}/backup")
                 # Save a best checkpoint with optimizer/scaler/scheduler state
                 try:
-                    self.save_checkpoint(optimizer, epoch, scaler=scaler, best_val_loss=best_val_loss,
+                    self.save_checkpoint(optimizer, epoch+start_epoch, scaler=scaler, best_val_loss=best_val_loss,
                                          filepath=f"{self.model_name}/backup/checkpoint_best.pt",
                                          scheduler=scheduler)
                 except Exception as e:
@@ -377,7 +377,7 @@ class TextRNN:
                     break
             # Save latest checkpoint each epoch so training can resume from recent state
             try:
-                self.save_checkpoint(optimizer, epoch, scaler=scaler, best_val_loss=best_val_loss,
+                self.save_checkpoint(optimizer, epoch+start_epoch, scaler=scaler, best_val_loss=best_val_loss,
                                      filepath=f"{self.model_name}/checkpoint_latest.pt", scheduler=scheduler)
             except Exception as e:
                 Console.warning(f"Failed to save latest checkpoint: {e}")
@@ -519,9 +519,9 @@ class TextRNN:
         # If no filepath provided, try latest -> fallback to legacy names -> backup best
         if filepath is None:
             candidates = [
-                os.path.join('assets', 'trained', self.model_name, 'checkpoint_latest.pt'),
-                os.path.join('assets', 'trained', self.model_name, 'checkpoint.pt'),
-                os.path.join('assets', 'trained', self.model_name, 'backup', 'checkpoint_best.pt'),
+                os.path.join('src', 'assets', 'trained', self.model_name, 'checkpoint_latest.pt'),
+                os.path.join('src', 'assets', 'trained', self.model_name, 'checkpoint.pt'),
+                os.path.join('src', 'assets', 'trained', self.model_name, 'backup', 'checkpoint_best.pt'),
             ]
             for p in candidates:
                 if os.path.exists(p):
@@ -530,9 +530,9 @@ class TextRNN:
             else:
                 raise FileNotFoundError(f"No checkpoint found for model {self.model_name}")
         elif filepath.endswith('.pt'):
-            checkpoint_path = filepath if os.path.isabs(filepath) else os.path.join('assets', 'trained', filepath)
+            checkpoint_path = filepath if os.path.isabs(filepath) else os.path.join('src', 'assets', 'trained', filepath)
         else:
-            checkpoint_path = os.path.join('assets', 'trained', filepath, 'checkpoint.pt')
+            checkpoint_path = os.path.join('src', 'assets', 'trained', filepath, 'checkpoint.pt')
 
         if not os.path.exists(checkpoint_path):
             raise FileNotFoundError(f"Checkpoint file not found: {checkpoint_path}")
